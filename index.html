@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>มีจดหมายส่งถึงเธอนะ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500&family=Charm&display=swap');
+
+        /* --- สไตล์พื้นฐาน --- */
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+            font-family: 'Anuphan', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .scene {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* --- กล่องจดหมาย (Mailbox) --- */
+        .mailbox {
+            position: relative;
+            width: 200px;
+            height: 130px;
+            background: #4a5568;
+            border-radius: 65px 65px 10px 10px;
+            box-shadow: 0 10px 25px rgba(26, 32, 44, 0.15);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin-top: 100px;
+            z-index: 15;
+        }
+
+        .mailbox:hover {
+            transform: scale(1.02) translateY(-2px);
+        }
+
+        /* เสากล่อง */
+        .mailbox::after {
+            content: "";
+            position: absolute;
+            bottom: -140px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 140px;
+            background: #2d3748;
+            border-radius: 0 0 7px 7px;
+            z-index: -1;
+        }
+
+        /* ฝาเปิด (ด้านหน้า) */
+        .mailbox-door {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #718096;
+            border-radius: 65px 65px 10px 10px;
+            border: 3px solid #4a5568;
+            box-sizing: border-box;
+            transform-origin: bottom;
+            transition: transform 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 18px;
+        }
+
+        /* ที่จับฝา */
+        .mailbox-door::after {
+            content: "";
+            width: 22px;
+            height: 10px;
+            background: #a0aec0;
+            border-radius: 5px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* ธงจดหมาย */
+        .flag {
+            position: absolute;
+            right: -18px;
+            bottom: 35px;
+            width: 10px;
+            height: 65px;
+            background: #f87171;
+            transform-origin: bottom center;
+            transform: rotate(-90deg);
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 3px;
+            z-index: 12;
+        }
+
+        .flag::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -8px;
+            width: 28px;
+            height: 18px;
+            background: #ef4444;
+            border-radius: 3px;
+        }
+
+        /* --- แผ่นจดหมาย (Letter) --- */
+        .letter {
+            position: absolute;
+            bottom: 150px;
+            width: 600px;
+            background: #ffffff;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 20px;
+            box-sizing: border-box;
+            opacity: 0;
+            visibility: hidden;
+            transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.5s, 
+                        opacity 0.6s ease 0.5s, 
+                        visibility 0s linear 1.1s;
+            z-index: 5;
+            overflow: hidden;
+            border: 1px solid #f9a8d4;
+        }
+
+        /* สไตล์ข้อความจดหมาย */
+        .letter h1 {
+            font-family: 'Charm', cursive;
+            color: #db2777;
+            font-size: 24px;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        .letter .message-container {
+            font-size: 14.5px;
+            line-height: 1.7;
+            color: #4a5568;
+            text-indent: 20px;
+            margin-bottom: 10px;
+            /* Typing area */
+        }
+
+        .letter .signature {
+            text-align: right;
+            font-family: 'Charm', cursive;
+            font-size: 19px;
+            color: #db2777;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        /* คำแนะนำ */
+        .tip {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: #9d174d;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 5px 14px;
+            border-radius: 15px;
+            animation: pulse 1.6s infinite;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; transform: translateX(-50%) scale(1.02); }
+        }
+
+        /* --- สเตทแอนิเมชันเปิด (Open State) --- */
+        .scene.open .mailbox-door {
+            transform: rotateX(-115deg);
+        }
+
+        .scene.open .flag {
+            transform: rotate(0deg);
+            transition-delay: 0.1s;
+        }
+
+        .scene.open .letter {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50px);
+            z-index: 25;
+            transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.5s, 
+                        opacity 0.6s ease 0.5s, 
+                        visibility 0s linear 0s;
+        }
+
+        .scene.open .tip {
+            opacity: 0;
+        }
+
+        .scene.open .letter .signature {
+            opacity: 1;
+            transition-delay: 5s; /* หน่วงเวลาลายเซ็นเล็กน้อย */
+        }
+
+        /* --- กิมมิก: กลีบดอกไม้ปลิว --- */
+        .petal {
+            position: absolute;
+            top: -10px;
+            background: linear-gradient(135deg, #fbcfe8, #f472b6);
+            border-radius: 10px 10px 0 10px;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 5;
+        }
+
+        @keyframes fall {
+            0% { top: -10px; transform: translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { top: 100vh; transform: translateX(80px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- พื้นหลังสำหรับกลีบดอกไม้ -->
+    <div id="petals-container"></div>
+
+    <div class="scene" id="mailScene">
+        
+        <!-- จดหมาย -->
+        <div class="letter">
+            <h1>ถึง...เธอคนเก่งของผม</h1>
+            <div class="message-container" id="typing-area">
+                <!-- ข้อความจะถูกพิมพ์ที่นี่ -->
+            </div>
+            <div class="signature">ขอบคุณนะ 😊</div>
+        </div>
+
+        <!-- กล่องจดหมาย -->
+        <div class="mailbox" id="mailbox" onclick="openMailbox()">
+            <div class="mailbox-door"></div>
+            <div class="flag"></div>
+            <div class="tip">ลองกดที่กล่องดูสิเอ๋ย...📮</div>
+        </div>
+    </div>
+
+    <script>
+        let isOpen = false;
+        const fullMessage = "ที่ผ่านมา ขอบคุณมากๆเลยนะ ขอบคุณจริงๆ นี้อาจจะเป็นข้อความสุดท้ายของเค้าก็ได้ แค่อยากมาบอกว่า\nขอโทษในหลายๆเรื่อง ขอโทษที่สัญญาไรไว้ทำไม่สำเร็จเลยสักอย่่าง ขอโทษที่ไม่ได้พาไปเชียงใหม่ด้วยกัน ขอโทษที่ไม่ได้พาไปญี่ปุ่นที่เธออยากไป ขอโทษที่ไม่ได้อยู่ด้วยกัน ขอโทษหลายๆเรื่องเลยนะ\nเค้ารักเธอมากที่สุด เอาจริงๆเค้าอยากมีเธออยู่ด้วยนะ แต่เค้าดันทำไรไม่ดีใส่เธอไป เค้ายังเก็บไว้อยู่นะรูปเธอเค้าลบไม่ลงจริงๆ แชททั้งไลน์ไอจีเค้าไม่ได้เอาหมุดออกเลยกลัวแชทเธอหายไปจะไม่เจออีก เค้าอยากพิมเยอะกว่านี้ แต่ไม่อยากให้เสียเวลากับเค้าด้วยแหละ ขอบคุณสำหรับทุกอย่่างเลยนะ ขอบคุณจริงๆ สู้ในการทำงานะเค้าไม่ได้อยู่ใกล้ๆแต่จะเป็นกำลังใจให้นะ เธอเก่งอยู่แล้วเค้ารู้เพราะทุกครั้งที่เธอทำมักสำเร็จเสมอ เธอเก่งมากกก ขอโทษที่รบกวนนะ และ ขอบคุณ และรักเสมอ ไม่ต้องห่วงเค้านะเค้าตอนนี้กำลังเรียนภาษาจีนอังกฤษอยู่มึนมากกกก  เค้าไปละไม่รบกวนดีกว่า เค้ารักเธอนะ💖 ";
+
+        // ฟังก์ชันพิมพ์ข้อความ
+        function typeMessage(text, elementId, speed) {
+            let i = 0;
+            const element = document.getElementById(elementId);
+            element.innerHTML = ""; // ล้างข้อความเก่าก่อน
+            
+            function type() {
+                if (i < text.length) {
+                    if (text.charAt(i) === '\n') {
+                        element.innerHTML += '<br>'; // ใส่ <br> เมื่อเจอ \n
+                    } else {
+                        element.innerHTML += text.charAt(i);
+                    }
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        // ฟังก์ชันสร้างกลีบดอกไม้ปลิว
+        function createPetals() {
+            const container = document.getElementById('petals-container');
+            const petalCount = 35; // จำนวนกลีบ
+
+            for (let i = 0; i < petalCount; i++) {
+                const petal = document.createElement('div');
+                petal.classList.add('petal');
+                petal.style.width = `${Math.random() * 10 + 6}px`; // สุ่มขนาด 6-16px
+                petal.style.height = `${Math.random() * 10 + 6}px`;
+                petal.style.left = `${Math.random() * 100}%`; // สุ่มตำแหน่งแนวนอน
+                petal.style.animationDelay = `${Math.random() * 1}s`; // สุ่มเวลาหน่วง
+                petal.style.animationDuration = `${Math.random() * 1 + 2}s`; // สุ่มความเร็ว 3-5s
+                petal.style.animationName = 'fall';
+                
+                // สุ่มสีกลีบดอกไม้นิดหน่อย
+                const petalColor = Math.random() < 0.5 ? '#fbcfe8' : '#f472b6';
+                petal.style.background = `linear-gradient(135deg, ${petalColor}, #fdf2f8)`;
+
+                container.appendChild(petal);
+
+                // ลบกลีบหลังอนิเมชันจบ
+                petal.addEventListener('animationend', () => petal.remove());
+            }
+        }
+
+
+        function openMailbox() {
+            const scene = document.getElementById('mailScene');
+            
+            if (!isOpen) {
+
+                scene.classList.add('open');
+                isOpen = true;
+                
+
+                setTimeout(() => {
+                    typeMessage(fullMessage, 'typing-area', 55);
+                }, 100); // เริ่มพิมพ์หลังจากเปิดกล่อง 1.3s
+
+
+                createPetals();
+                
+            } else {
+
+                scene.classList.remove('open');
+                isOpen = false;
+                
+                document.getElementById('typing-area').innerHTML = "";
+                document.getElementById('petals-container').innerHTML = "";
+            }
+        }
+    </script>
+
+</body>
+</html>
